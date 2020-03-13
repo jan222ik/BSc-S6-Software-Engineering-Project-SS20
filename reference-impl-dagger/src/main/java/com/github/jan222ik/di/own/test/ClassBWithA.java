@@ -1,14 +1,16 @@
 package com.github.jan222ik.di.own.test;
 
+import com.github.jan222ik.di.own.FromProperty;
 import com.github.jan222ik.di.own.OurInject;
 
 public class ClassBWithA {
 
     @OurInject
     private InterfaceA dependency;
-    @OurInject(name = "dog")
+
+    @FromProperty("dog")
     private String dog;
-    @OurInject(name = "cat")
+    @FromProperty("cat")
     private String cat;
 
     @OurInject

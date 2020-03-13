@@ -35,19 +35,21 @@ public class DIFramework {
             NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         for (Field field : instance.getClass().getDeclaredFields()) {
             if (field.isAnnotationPresent(OurInject.class)) {
-                OurInject annotation = field.getAnnotation(OurInject.class);
-                if (!annotation.name().equals("")) {
-                    field.setAccessible(true);
-                    if (annotation.name().equals("dog")) {
-                        field.set(instance, "Bello");
-                    } else {
-                        field.set(instance, "Mizi");
+                Class<?> fieldType = field.getType();
+                Class<?> dependencyType = (!fieldType.isInterface()) ? fieldType : mappingModule.getMapping(fieldType);
+                field.setAccessible(true);
+                field.set(instance, dependencyType.getConstructor().newInstance());
+            } else {
+                if (field.isAnnotationPresent(FromProperty.class)){
+                    FromProperty annotation = field.getAnnotation(FromProperty.class);
+                    if (!annotation.value().equals("") && field.getType().equals(String.class)) {
+                        field.setAccessible(true);
+                        if (annotation.value().equals("dog")) {
+                            field.set(instance, "Bello");
+                        } else {
+                            field.set(instance, "Mizi");
+                        }
                     }
-                } else {
-                    Class<?> fieldType = field.getType();
-                    Class<?> dependencyType = (!fieldType.isInterface()) ? fieldType : mappingModule.getMapping(fieldType);
-                    field.setAccessible(true);
-                    field.set(instance, dependencyType.getConstructor().newInstance());
                 }
             }
         }
