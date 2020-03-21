@@ -1,72 +1,97 @@
 package com.github.jan222ik.di.own;
 
+
+import lombok.Setter;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 
+@SuppressWarnings({"UnusedReturnValue"})
 public class DIFramework {
     private IModule mappingModule;
+    @Setter
+    private Map<Class<? extends InjectInterface>, Consumer<? extends InjectInterface>> interfaceInjects;
 
     public DIFramework(IModule mappingModule) {
-        mappingModule.configure();
-        this.mappingModule = mappingModule;
+        this();
+        if (mappingModule != null) {
+            mappingModule.configure();
+            this.mappingModule = mappingModule;
+        }
     }
 
-    public <T> T createInstanceOf(Class<T> type) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        if (type == null) throw new IllegalArgumentException("Type may not be null");
-        Class<? extends T> realType = type;
-        if (type.isInterface()) {
-            realType = mappingModule.getMapping(type);
+    public DIFramework() {
+        this.mappingModule = new AbstractModule.EmptyModule();
+        this.mappingModule.configure();
+    }
+
+    public <T> T createInstanceOf(Class<T> type) throws Exception {
+        Class<? extends T> realType = (type == null || !type.isInterface()) ? type : mappingModule.getMapping(type);
+        if (realType == null) {
+            return null;
         }
-        for (final Constructor<?> constructor : realType.getConstructors()) {
-            if (constructor.isAnnotationPresent(OurInject.class)) {
-                T instance = injectConstructor(realType, constructor);
-                injectFields(instance);
-                return instance;
-            }
+        Optional<Constructor<?>> applicableConstructor = Arrays
+                .stream(realType.getConstructors())
+                .filter(con -> con.isAnnotationPresent(OurInject.class))
+                .findFirst();
+
+        final T instance;
+        if (applicableConstructor.isPresent()) {
+            instance = injectConstructor(realType, applicableConstructor.get());
+        } else {
+            Constructor<?> con = realType.getConstructor();
+            //noinspection unchecked
+            instance = (T) con.newInstance();
         }
-        Constructor<?> constructor = realType.getConstructors()[0];
-        T instance = (T) constructor.newInstance();
-        injectFields(instance);
+        return injectFields(instance);
+    }
+
+    private <T> T injectConstructor(Class<T> type, Constructor<?> constructor) throws Exception {
+        Class<?>[] parameterTypes = constructor.getParameterTypes();
+        Object[] args = new Object[parameterTypes.length];
+        int i = 0;
+        for (Class<?> paramType : parameterTypes) {
+            Object dependency = createInstanceOf(paramType);
+            args[i++] = dependency;
+        }
+        return type.getConstructor(parameterTypes).newInstance(args);
+    }
+
+    private <T> T injectFields(final T instance) throws Exception {
+        for (Field field : instance.getClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(OurInject.class)) {
+                field.setAccessible(true);
+                Object dependency = createInstanceOf(field.getType());
+                field.set(instance, dependency);
+            } //else processFromPropertyAnnotation(instance, field);
+        }
         return instance;
     }
 
-    private <T> void injectFields(T instance) throws
-            NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        for (Field field : instance.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(OurInject.class)) {
-                Class<?> fieldType = field.getType();
-                Class<?> dependencyType = (!fieldType.isInterface()) ? fieldType : mappingModule.getMapping(fieldType);
-                field.setAccessible(true);
-                field.set(instance, dependencyType.getConstructor().newInstance());
-            } else {
-                if (field.isAnnotationPresent(FromProperty.class)){
-                    FromProperty annotation = field.getAnnotation(FromProperty.class);
-                    if (!annotation.value().equals("") && field.getType().equals(String.class)) {
-                        field.setAccessible(true);
-                        if (annotation.value().equals("dog")) {
-                            field.set(instance, "Bello");
-                        } else {
-                            field.set(instance, "Mizi");
-                        }
-                    }
-                }
+    public <T extends InjectInterface> T injectInterface(T instance) {
+        for (Class<?> iFace : instance.getClass().getInterfaces()) {
+            //noinspection unchecked
+            Consumer<T> consumer = (Consumer<T>) interfaceInjects.get(iFace);
+            if (consumer != null) {
+                consumer.accept(instance);
             }
         }
+        return instance;
     }
 
-    private <T> T injectConstructor(Class<T> type, Constructor<?> constructor) throws
-            NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        final Class<?>[] parameterTypes = constructor.getParameterTypes();
-        final Object[] objArr = new Object[parameterTypes.length];
-        int i = 0;
-        for (final Class<?> paramType : parameterTypes) {
-            Class<?> dependencyType = (!paramType.isInterface()) ? paramType : mappingModule.getMapping(paramType);
-            if (paramType.isAssignableFrom(dependencyType)) {
-                objArr[i++] = dependencyType.getConstructor().newInstance();
-            }
+
+    public <T> void processFromPropertyAnnotation(T instance, Field field) throws Exception {
+        if (field.isAnnotationPresent(FromProperty.class)) {
+            field.setAccessible(true);
+            FromProperty annotation = field.getAnnotation(FromProperty.class);
+            if (!annotation.value().equals("") && field.getType().equals(String.class)) {
+                boolean isDog = annotation.value().equals("dog");
+                field.set(instance, (isDog) ? "Bello" : "Mizi");
+            } else field.set(instance, null);
         }
-        return type.getConstructor(parameterTypes).newInstance(objArr);
     }
-
 }
