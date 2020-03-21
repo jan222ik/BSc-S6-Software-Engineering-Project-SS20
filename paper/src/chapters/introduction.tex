@@ -1,0 +1,30 @@
+\chapter{Introduction Chapter}\label{ch:intro-chapter}
+\section{Inversion of Control}\label{sec:inv-of-control}
+The Inversion of Control pattern can be seen in many programming frameworks, often being a defining characteristic of them.
+A programmer often controls when his code is called.
+However, when using a framework, control is handed over to said framework.
+This is Inversion of Control, also known as "The Hollywood Principle" (don't call us, we'll call you).
+It is a key difference between a library and a framework, as in a library, you call the functions, while many frameworks invert the control.\parencite{fowler_bliki_2005}
+\newline
+\section{Dependency Injection}\label{sec:dep-injection}
+A common issue in programming is how to wire together different elements.
+If you have a team building a web controller and another team building a database backend, how do you get them to work together?
+For Dependency Injection, the basic idea is that a separate object, an "assembler", populates a field in a class with the appropriate implementation of an interface.
+There are three main ways of doing this: Constructor Injection, Setter Injection and Interface Injection.
+\subsection{Constructor Injection}\label{subsec:cons-injection}
+Like the name implies, the injection takes place in the constructor in such a case.
+\begin{longlisting}
+    \begin{minted}{java}
+        public class MovieLister {
+            private MovieFinder finder;
+            public MovieLister(MovieFinder finder) {
+                this.finder = finder;
+            }
+        }
+    \end{minted}
+    \caption[Dependency Injection Example]{A code example showing dependency injection via constructor.}
+    \label{lst:ci-example}
+\end{longlisting}
+Note that MovieFinder is an interface in this example.
+All classes that implement said interface can be passed into the constructor and are injected into the class that way.\parencite{fowler_inversion_2004}
+
