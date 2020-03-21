@@ -27,7 +27,6 @@ public abstract class AbstractModule implements IModule {
                 '}';
     }
 
-    @SuppressWarnings("InnerClassMayBeStatic")
     public static class EmptyModule extends AbstractModule {
         @Override
         public void configure() { /* No Configuration needed */ }
