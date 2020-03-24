@@ -1,20 +1,16 @@
 package com.github.jan222ik.di.own;
 
 
-import lombok.Setter;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-@SuppressWarnings({"UnusedReturnValue"})
+@SuppressWarnings({"UnusedReturnValue", "unchecked"})
 public class DIFramework {
     private IModule mappingModule;
-    @Setter
-    private Map<Class<? extends InjectInterface>, Consumer<? extends InjectInterface>> interfaceInjects;
+    private InterfaceMappings interfaceInjects;
 
     public DIFramework(IModule mappingModule) {
         this();
@@ -67,20 +63,28 @@ public class DIFramework {
                 field.setAccessible(true);
                 Object dependency = createInstanceOf(field.getType());
                 field.set(instance, dependency);
-            } //else processFromPropertyAnnotation(instance, field);
+            }
+            // processFromPropertyAnnotation(instance, field);
         }
         return instance;
     }
 
     public <T extends InjectInterface> T injectInterface(T instance) {
         for (Class<?> iFace : instance.getClass().getInterfaces()) {
-            //noinspection unchecked
-            Consumer<T> consumer = (Consumer<T>) interfaceInjects.get(iFace);
-            if (consumer != null) {
-                consumer.accept(instance);
+            try {
+                Consumer<T> consumer = (Consumer<T>) interfaceInjects.getMapping((Class<? extends InjectInterface>) iFace);
+                if (consumer != null) {
+                    consumer.accept(instance);
+                }
+            } catch (ClassCastException ignored) {
             }
         }
         return instance;
+    }
+
+    public void setInterfaceInjects(InterfaceMappings interfaceInjects) {
+        this.interfaceInjects = interfaceInjects;
+        this.interfaceInjects.configure();
     }
 
 

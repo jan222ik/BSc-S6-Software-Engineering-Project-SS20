@@ -2,35 +2,39 @@ package com.github.jan222ik.di.own.tests;
 
 import com.github.jan222ik.di.own.DIFramework;
 import com.github.jan222ik.di.own.IService;
-import com.github.jan222ik.di.own.InjectInterface;
 import com.github.jan222ik.di.own.InjectServiceInterface;
+import com.github.jan222ik.di.own.InterfaceMappings;
 import com.github.jan222ik.di.own.ServiceA;
-import lombok.Getter;
+import com.github.jan222ik.di.own.ServiceB;
+import com.github.jan222ik.di.own.ServiceC;
+import com.github.jan222ik.helper.C;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-
-import static junit.framework.TestCase.assertNotNull;
-
-@SuppressWarnings("InnerClassMayBeStatic")
-public class InterfaceInjectionTest {
+public class InterfaceInjectionTest extends C {
     @Test
     public void interfaceInjection() {
         DIFramework framework = new DIFramework();
-        framework.setInterfaceInjects(genMappings());
+        framework.setInterfaceInjects(new InterfaceMapping());
 
 
         ClientInterfaceInjection instance = new ClientInterfaceInjection();
         framework.injectInterface(instance);
 
-        assertNotNull(instance.getService());
+        logObj("ClientInterfaceInjection",
+                field("service", instance.service)
+        );
+
+        ClientInterfaceInjection instance2 = new ClientInterfaceInjection();
+        framework.injectInterface(instance2);
+
+        logObj("Comparison",
+                fieldV("instance1", instance.service),
+                fieldV("instance2", instance2.service)
+        );
     }
 
     public class ClientInterfaceInjection implements InjectServiceInterface {
 
-        @Getter
         private IService service;
 
         @Override
@@ -39,12 +43,15 @@ public class InterfaceInjectionTest {
         }
     }
 
-    private Map<Class<? extends InjectInterface>, Consumer<? extends InjectInterface>> genMappings() {
-        HashMap<Class<? extends InjectInterface>, Consumer<? extends InjectInterface>> map = new HashMap<>();
-        map.put(InjectServiceInterface.class, o -> {
+    public class InterfaceMapping extends InterfaceMappings {
+        @Override
+        public void configure() {
             final IService service = new ServiceA();
-            ((InjectServiceInterface) o).setService(service);
-        });
-        return map;
+
+            createMapping(InjectServiceInterface.class, o -> ((InjectServiceInterface) o).setService(service));
+        }
     }
+
+
+    private static final Object[] _imports = {ServiceA.class, ServiceB.class, ServiceC.class};
 }

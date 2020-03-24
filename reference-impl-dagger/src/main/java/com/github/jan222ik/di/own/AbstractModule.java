@@ -1,5 +1,7 @@
 package com.github.jan222ik.di.own;
 
+import com.github.jan222ik.helper.C;
+
 import java.util.HashMap;
 
 @SuppressWarnings("SameParameterValue")
@@ -14,17 +16,15 @@ public abstract class AbstractModule implements IModule {
 
     @Override
     public <T> Class<? extends T> getMapping(Class<T> interfaceType) {
-        System.out.println("interfaceType = " + interfaceType);
-        if (interfaceType == null) return null;
         Class<?> implType = mappings.get(interfaceType);
-        return implType.asSubclass(interfaceType);
+        if (implType != null) {
+            return implType.asSubclass(interfaceType);
+        } else return null;
     }
 
     @Override
     public String toString() {
-        return "AbstractModule{" +
-                "mappings=" + mappings +
-                '}';
+        return C.stringifyObj("AbstractModule", C.field("mappings", mappings));
     }
 
     public static class EmptyModule extends AbstractModule {
