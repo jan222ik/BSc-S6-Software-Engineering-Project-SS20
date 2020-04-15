@@ -1,6 +1,6 @@
 package com.github.jan222ik.di.own.tests;
 
-import com.github.jan222ik.di.own.DIFramework;
+import com.github.jan222ik.di.own.Injector;
 import com.github.jan222ik.di.own.IService;
 import com.github.jan222ik.di.own.InjectServiceInterface;
 import com.github.jan222ik.di.own.InterfaceMappings;
@@ -13,19 +13,19 @@ import org.junit.Test;
 public class InterfaceInjectionTest extends C {
     @Test
     public void interfaceInjection() {
-        DIFramework framework = new DIFramework();
-        framework.setInterfaceInjects(new InterfaceMapping());
+        Injector injector = new Injector();
+        injector.setInterfaceInjects(new InterfaceMapping());
 
 
         ClientInterfaceInjection instance = new ClientInterfaceInjection();
-        framework.injectInterface(instance);
+        injector.injectInterface(instance);
 
         logObj("ClientInterfaceInjection",
                 field("service", instance.service)
         );
 
         ClientInterfaceInjection instance2 = new ClientInterfaceInjection();
-        framework.injectInterface(instance2);
+        injector.injectInterface(instance2);
 
         logObj("Comparison",
                 fieldV("instance1", instance.service),
@@ -46,7 +46,7 @@ public class InterfaceInjectionTest extends C {
     public class InterfaceMapping extends InterfaceMappings {
         @Override
         public void configure() {
-            final IService service = new ServiceA();
+            final IService service = new ServiceB();
 
             createMapping(InjectServiceInterface.class, o -> ((InjectServiceInterface) o).setService(service));
         }

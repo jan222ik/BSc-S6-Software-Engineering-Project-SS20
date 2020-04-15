@@ -2,7 +2,7 @@ package com.github.jan222ik.di.own.tests;
 
 import com.github.jan222ik.di.own.AbstractModule;
 import com.github.jan222ik.di.own.Client;
-import com.github.jan222ik.di.own.DIFramework;
+import com.github.jan222ik.di.own.Injector;
 import com.github.jan222ik.di.own.IModule;
 import com.github.jan222ik.di.own.IService;
 import com.github.jan222ik.di.own.OurInject;
@@ -18,7 +18,7 @@ public class FieldInjectionTest extends C {
     @Test
     public void fieldInjection() throws Exception {
         IModule mappingModule = new ModuleFieldInjection();
-        DIFramework framework = new DIFramework(mappingModule);
+        Injector framework = new Injector(mappingModule);
 
         ClientFieldInjection instance = framework.createInstanceOf(ClientFieldInjection.class);
 

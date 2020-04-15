@@ -8,11 +8,11 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 @SuppressWarnings({"UnusedReturnValue", "unchecked"})
-public class DIFramework {
+public class Injector {
     private IModule mappingModule;
     private InterfaceMappings interfaceInjects;
 
-    public DIFramework(IModule mappingModule) {
+    public Injector(IModule mappingModule) {
         this();
         if (mappingModule != null) {
             mappingModule.configure();
@@ -20,7 +20,7 @@ public class DIFramework {
         }
     }
 
-    public DIFramework() {
+    public Injector() {
         this.mappingModule = new AbstractModule.EmptyModule();
         this.mappingModule.configure();
     }
@@ -40,7 +40,6 @@ public class DIFramework {
             instance = injectConstructor(realType, applicableConstructor.get());
         } else {
             Constructor<?> con = realType.getConstructor();
-            //noinspection unchecked
             instance = (T) con.newInstance();
         }
         return injectFields(instance);
@@ -64,7 +63,6 @@ public class DIFramework {
                 Object dependency = createInstanceOf(field.getType());
                 field.set(instance, dependency);
             }
-            // processFromPropertyAnnotation(instance, field);
         }
         return instance;
     }
